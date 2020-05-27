@@ -480,17 +480,25 @@ namespace TeconMoon_s_WiiVC_Injector
             AutoBuildNext();
         }
 
-        private bool EndsWithDiscSuffix(string name, int discNumber)
+        private bool MatchesWithDiscSuffix(string name, int discNumber)
+        {
+            return MatchesWithDiscSuffix(name, discNumber, name);
+        }
+
+        private bool MatchesWithDiscSuffix(string name, int discNumber, string searchedName)
         {
             string[] discSuffixes = new string[] { "-", "-dvd", "-disc", "-d" };
             bool result = false;
 
             foreach (string discSuffix in discSuffixes)
             {
-                if (name.EndsWith(discSuffix + discNumber))
+                if (name.EndsWith(discSuffix + discNumber) && searchedName.StartsWith(name.Substring(0, name.IndexOf(discSuffix + discNumber))))
+                {
                     result = true;
-                break;
+                    break;
+                }
             }
+
             return result;
         }
 
@@ -501,12 +509,12 @@ namespace TeconMoon_s_WiiVC_Injector
 
 
 
-            if (EndsWithDiscSuffix(Path.GetFileNameWithoutExtension(selectedGame), 1))
+            if (MatchesWithDiscSuffix(Path.GetFileNameWithoutExtension(selectedGame), 1))
             {
                 result[0] = selectedGame;
                 searchFor = 2;
             }
-            else if (EndsWithDiscSuffix(Path.GetFileNameWithoutExtension(selectedGame), 2))
+            else if (MatchesWithDiscSuffix(Path.GetFileNameWithoutExtension(selectedGame), 2))
             {
                 result[1] = selectedGame;
                 searchFor = 1;
@@ -524,7 +532,7 @@ namespace TeconMoon_s_WiiVC_Injector
                 foreach (string game in Program.AutoBuildList)
                 {
                     string gameDir = Path.GetDirectoryName(game);
-                    if (selectedGameDirectory == gameDir && EndsWithDiscSuffix(Path.GetFileNameWithoutExtension(game), searchFor))
+                    if (selectedGameDirectory == gameDir && MatchesWithDiscSuffix(Path.GetFileNameWithoutExtension(game), searchFor, Path.GetFileNameWithoutExtension(selectedGame)))
                     {
                         result[searchFor - 1] = game;
                         Program.AutoBuildList.Remove(game);
@@ -537,7 +545,7 @@ namespace TeconMoon_s_WiiVC_Injector
             DirectoryInfo currDirectory = new DirectoryInfo(selectedGameDirectory);
             foreach (FileInfo isoFile in currDirectory.GetFiles("*.iso"))
             {
-                if (EndsWithDiscSuffix(Path.GetFileNameWithoutExtension(isoFile.Name), searchFor))
+                if (MatchesWithDiscSuffix(Path.GetFileNameWithoutExtension(isoFile.Name), searchFor, Path.GetFileNameWithoutExtension(selectedGame)))
                 {
                     result[searchFor - 1] = isoFile.FullName;
                     return result;
